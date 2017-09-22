@@ -1,8 +1,3 @@
-CONVERSION_RATES = {'EUR' => {
-   'USD'     => 1.11,
-   'Bitcoin' => 0.0047 }
-}
-
 class Money
   attr_accessor :amount, :currency
   def initialize(amount = 0, currency = "EUR")
@@ -16,12 +11,14 @@ class Money
     case base_currency
     when 'EUR'
       return {
+      'EUR'     => 1,
       'USD'     => eur_in_usd,
       'Bitcoin' => eur_in_bc
       }
     when 'USD'
       return {
-      'USD'     => 1/eur_in_usd,
+      'USD'     => 1,
+      'EUR'     => 1/eur_in_usd,
       'Bitcoin' => 1/eur_in_bc
       }
     else 'currency not available'
@@ -29,15 +26,10 @@ class Money
   end
 
   def inspect
-    "#{sprintf('%.2f', amount)} #{currency}"
-    # "#{amount} #{currency}"
+    return "#{sprintf('%.2f', amount)} #{currency}"
   end
 
   def convert_to(currency)
-    #converted_amount =  self.amount * CONVERSION_RATES['EUR'][currency]
-    #converted_money = Money.new(converted_amount, currency)
-    #return converted_money
-    #p Money.conversion_rates(self.currency)[currency]
     converted_amount =  self.amount * Money.conversion_rates(self.currency)[currency]
     converted_money = Money.new(converted_amount, currency)
     return converted_money
@@ -46,29 +38,34 @@ class Money
   include Comparable
 
   def <=>(other)
-    amount <=> other.amount
+    first_val = self.convert_to('EUR')
+    second_val = other.convert_to('EUR')
+    first_val.amount <=> second_val.amount
   end
 
-  def +(other)
-    first_val = self
-    second_val = other
-    first_val = self.convert_to(self.currency) if self.currency != 'EUR'
-    second_val = other.convert_to(other.currency) if other.currency != 'EUR'
-    return Money.new(first_val.amount.public_send(:+, second_val.amount), 'EUR')
+  [:+, :-].each do |op|
+    define_method(op) do |other|
+      first_val = self.convert_to('EUR')
+      second_val = other.convert_to('EUR')
+      return Money.new(first_val.amount.public_send(op, second_val.amount), 'EUR')
+    end
   end
 
-  def -(other)
-    first_val = self
-    second_val = other
-    first_val = self.convert_to(self.currency) if self.currency != 'EUR'
-    second_val = other.convert_to(other.currency) if other.currency != 'EUR'
-    return Money.new(first_val.amount.public_send(:-, second_val.amount), 'EUR')
+  [:*, :/].each do |op|
+    define_method(op) do |value|
+      return Money.new(self.amount.public_send(op, value), self.currency)
+    end
   end
 
 end
 
 fifty_eur = Money.new(50, 'EUR')
 twenty_dollars = Money.new(20, 'USD')
-p fifty_eur.convert_to('USD')
-p fifty_eur + twenty_dollars
-p fifty_eur - twenty_dollars
+fifty_eur.convert_to('USD')
+fifty_eur - twenty_dollars
+twenty_dollars * 3
+fifty_eur / 2
+p twenty_dollars < fifty_eur
+p twenty_dollars == Money.new(20, 'EUR')
+
+
