@@ -1,10 +1,13 @@
 class Money
+  # define variables, default values and access
   attr_accessor :amount, :currency
-  def initialize(amount = 0, currency = "EUR")
+  def initialize(amount, currency = "EUR")
     @amount = amount
     @currency = currency
   end
 
+  # define conversion rates for base currency
+  # instead of hard coding rates another gem or parsing of websites can be used to have dynamically changing rates
   def self.conversion_rates(base_currency)
     eur_in_usd = 1.11
     eur_in_bc = 0.0047
@@ -25,6 +28,7 @@ class Money
     end
   end
 
+  # save exact amount but display with only two decimals
   def inspect
     return "#{sprintf('%.2f', amount)} #{currency}"
   end
@@ -57,15 +61,14 @@ class Money
     end
   end
 
+  # code covers all basic functions, more considerations about specific cases would be next step e.g.
+  # - not passing amount of money
+  # - passing negative amount of money
+  # - more currencies available
+  # - division by zero
+  # - substract bigger values -> negative amount or always 0?
+  # - raising individual error messsages
+  # etc.
 end
-
-fifty_eur = Money.new(50, 'EUR')
-twenty_dollars = Money.new(20, 'USD')
-fifty_eur.convert_to('USD')
-fifty_eur - twenty_dollars
-twenty_dollars * 3
-fifty_eur / 2
-p twenty_dollars < fifty_eur
-p twenty_dollars == Money.new(20, 'EUR')
 
 
