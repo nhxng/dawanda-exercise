@@ -49,15 +49,19 @@ class Money
 
   [:+, :-].each do |op|
     define_method(op) do |other|
+    if self.currency == other.currency
+      return Money.new(self.amount.public_send(op, other.amount), self.currency)
+    else
       first_val = self.convert_to('EUR')
       second_val = other.convert_to('EUR')
       return Money.new(first_val.amount.public_send(op, second_val.amount), 'EUR')
+    end
     end
   end
 
   [:*, :/].each do |op|
     define_method(op) do |value|
-      return Money.new(self.amount.public_send(op, value), self.currency)
+      return Money.new(self.amount.to_f.public_send(op, value), self.currency)
     end
   end
 
@@ -69,6 +73,12 @@ class Money
   # - substract bigger values -> negative amount or always 0?
   # - raising individual error messsages
   # etc.
+
 end
 
-
+# twenty_dollars = Money.new(25, 'USD')
+# dollars = twenty_dollars / 2
+# puts dollars.inspect
+# one_dollar = Money.new(1, 'USD')
+# add_dollars = one_dollar + one_dollar
+# puts add_dollars.inspect
